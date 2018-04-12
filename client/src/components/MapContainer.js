@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { PureComponent } from 'react';
 import { compose, withProps } from 'recompose';
 import {
   withScriptjs,
@@ -7,12 +7,31 @@ import {
   Marker
 } from 'react-google-maps';
 
+function findCenter(locations) {
+  const maxCallback = (acc, cur) => Math.max(acc, cur);
+  const minCallback = (acc, cur) => Math.min(acc, cur);
+  
+  const latmin = locations.map(location => location.lat)
+    .reduce(minCallback, -Infinity);
+  const latMax = locations.map(location => location.lat)
+    .reduce(maxCallback, Infinity);
+  const lngMin = locations.map(location => location.lng)
+    .reduce(minCallback, -Infinity);
+  const lngMax = locations.map(location => location.lng)
+    .reduce(maxCallback, Infinity);
+  
+    return { 
+      lat: (latmin + latMax) / 2,
+      lng: (lngMin + lngMax) / 2
+    };
+}
+
 const MyMapComponent = compose(
   withProps({
     googleMapURL:
       'https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=geometry,drawing,places',
     loadingElement: <div style={{ height: `100%` }} />,
-    containerElement: <div style={{ height: `400px` }} />,
+    containerElement: <div style={{ height: `600px` }} />,
     mapElement: <div style={{ height: `100%` }} />
   }),
   withScriptjs,
@@ -20,16 +39,15 @@ const MyMapComponent = compose(
 )(props => (
   <GoogleMap
     defaultZoom={10}
-    defaultCenter={{ lat: -43.51776, lng: 172.47304 }}
+    center={{ lat: props.locations[0].lat, lng: props.locations[0].lng }}
   >
-    {console.log(props)}
     {props.locations.map((location,i) => (
       <Marker position={{ lat: location.lat, lng: location.lng }} key={i}/>
     ))}
   </GoogleMap>
 ));
 
-export default class MyFancyComponent extends React.PureComponent {
+export default class MyFancyComponent extends PureComponent {
   state = {
     isMarkerShown: false
   };
